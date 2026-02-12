@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+
+{% block title %} - 首页{% endblock %}
+
+{% block content %}
+<div class="hero-section text-center py-5 bg-light rounded mb-4">
+    <h1 class="display-4">探索艺术的无限世界</h1>
+    <p class="lead">AI智能搜索，海量艺术作品数据库，深度艺术解析</p>
+    
+    <!-- AI搜索框 -->
+    <div class="row justify-content-center mt-4">
+        <div class="col-md-8">
+            <div class="input-group input-group-lg">
+                <input type="text" id="ai-search-input" class="form-control" 
+                       placeholder="问AI任何关于艺术的问题，例如：蒙娜丽莎、梵高、文艺复兴...">
+                <button class="btn btn-primary" type="button" onclick="performAISearch()" id="search-btn">
+                    <i class="fas fa-search"></i> AI搜索
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- AI回答区域 -->
+    <div id="ai-response" class="mt-4" style="display:none;">
+        <div class="card border-primary">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-robot me-2"></i>AI艺术助手解答</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info d-flex align-items-center" role="alert" id="demo-notice" style="display:none;">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <small>当前为演示模式，使用模拟AI数据。部署后接入真实AI模型即可获得更智能的回答。</small>
+                </div>
+                <p id="ai-answer-text" class="card-text"></p>
+                <hr>
+                <div id="ai-suggestions"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 特色功能 -->
+<div class="row mt-5">
+    <div class="col-md-4 mb-3">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-robot fa-3x text-primary mb-3"></i>
+                <h3>AI智能助手</h3>
+                <p>不懂就问，AI为你解答所有艺术疑问</p>
+                <button class="btn btn-sm btn-outline-primary" onclick="setExample('介绍文艺复兴')">试试提问</button>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-paint-brush fa-3x text-success mb-3"></i>
+                <h3>海量作品库</h3>
+                <p>收录全球知名艺术作品，持续更新</p>
+                <a href="/artworks" class="btn btn-outline-success">浏览作品</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-user-tie fa-3x text-warning mb-3"></i>
+                <h3>艺术家档案</h3>
+                <p>深入了解艺术家的生平与创作故事</p>
+                <a href="/authors" class="btn btn-outline-warning">查看作者</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 最新作品预览 -->
+<div class="mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>最新收录作品</h2>
+        <a href="/artworks" class="btn btn-sm btn-outline-secondary">查看全部</a>
+    </div>
+    <div class="row" id="latest-artworks">
+        <!-- 这里将通过JavaScript动态加载 -->
+        <div class="col-12 text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">加载中...</span>
+            </div>
+            <p class="mt-2 text-muted">正在加载作品数据...</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// 设置搜索框示例问题
+function setExample(question) {
+    document.getElementById('ai-search-input').value = question;
+    document.getElementById('ai-search-input').focus();
+}
+
+// 执行AI搜索
+async function performAISearch() {
+    const input = document.getElementById('ai-search-input');
+    const question = input.value.trim();
+    const searchBtn = document.getElementById('search-btn');
+    const responseDiv = document.getElementById('ai-response');
+    const answerText = document.getElementById('ai-answer-text');
+    const suggestionsDiv = document.getElementById('ai-suggestions');
+    const demoNotice = document.getElementById('demo-notice');
+    
+    if (!question) {
+        alert('请输入一个关于艺术的问题');
+        input.focus();
+        return;
+    }
+    
+    // 禁用按钮并显示加载状态
+    searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>思考中...';
+    searchBtn.disabled = true;
+    
+    // 显示回答区域和演示提示
+    responseDiv.style.display = 'block';
+    demoNotice.style.display = 'flex';
+    answerText.innerHTML = '<div class="text-center py-3"><i class="fas fa-spinner fa-spin fa-2x text-primary"></i><p class="mt-2">AI正在检索艺术知识库...</p></div>';
+    suggestionsDiv.innerHTML = '';
+    
+    try {
+        // 调用后端API（已在app.py中实现，现在使用的是模拟数据）
+        const response = await fetch('/api/ai-search', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ question: question })
+        });
+        
+        const data = await response.json();
+        
+        if (data.error) {
+            answerText.innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-triangle me-2"></i>抱歉，AI暂时无法回答：${data.error}</div>`;
+        } else {
+            // 显示AI回答
+            answerText.innerHTML = `<div style="line-height: 1.8;">${data.answer.replace(/\n/g, '<br>')}</div>`;
+            
+            // 显示相关建议 - 【核心修改点】每个建议变为可点击的按钮
+            if (data.suggestions && data.suggestions.length > 0) {
+                suggestionsDiv.innerHTML = '<h6><i class="fas fa-compass me-2"></i>您可能还想了解：</h6><div class="mt-2" id="suggestion-buttons"></div>';
+                
+                const buttonsContainer = document.getElementById('suggestion-buttons');
+                data.suggestions.forEach(item => {
+                    // 创建可点击的按钮，点击后跳转到作品列表页并携带搜索词
+                    const button = document.createElement('a');
+                    button.href = `/artworks?q=${encodeURIComponent(item)}`;
+                    button.className = 'btn btn-sm btn-outline-info me-2 mb-2';
+                    button.innerHTML = `<i class="fas fa-search me-1"></i>${item}`;
+                    buttonsContainer.appendChild(button);
+                });
+            }
+        }
+    } catch (error) {
+        answerText.innerHTML = `<div class="alert alert-warning"><i class="fas fa-wifi me-2"></i>网络请求失败，请检查网络连接或稍后重试。</div>`;
+        console.error('搜索失败:', error);
+    } finally {
+        // 恢复按钮状态
+        searchBtn.innerHTML = '<i class="fas fa-search me-2"></i>AI搜索';
+        searchBtn.disabled = false;
+    }
+}
+
+// 加载最新作品
+async function loadLatestArtworks() {
+    try {
+        // 稍等片刻，模拟加载
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        const response = await fetch('/api/latest-artworks');
+        const artworks = await response.json();
+        
+        const container = document.getElementById('latest-artworks');
+        container.innerHTML = '';
+        
+        if (artworks.length === 0) {
+            container.innerHTML = `
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        暂无作品数据。
+                        <a href="/admin/import-data" class="alert-link">点击此处导入示例数据</a>。
+                    </div>
+                </div>
+            `;
+            return;
+        }
+        
+        artworks.forEach(artwork => {
+            const col = document.createElement('div');
+            col.className = 'col-lg-3 col-md-4 col-sm-6 mb-4';
+            col.innerHTML = `
+                <div class="card h-100 shadow-sm">
+                    <img src="${artwork.image_url || '/static/images/default.jpg'}" 
+                         class="card-img-top" alt="${artwork.title}" 
+                         style="height: 180px; object-fit: cover; width: 100%;">
+                    <div class="card-body">
+                        <h6 class="card-title text-truncate" title="${artwork.title}">${artwork.title}</h6>
+                        <p class="card-text small text-muted">${artwork.artist_name || '未知艺术家'}</p>
+                    </div>
+                    <div class="card-footer bg-transparent border-top-0">
+                        <a href="/artwork/${artwork.id}" class="btn btn-sm btn-outline-primary w-100">查看详情</a>
+                    </div>
+                </div>
+            `;
+            container.appendChild(col);
+        });
+    } catch (error) {
+        console.error('加载作品失败:', error);
+        document.getElementById('latest-artworks').innerHTML = `
+            <div class="col-12">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>作品加载失败，请刷新页面重试。
+                </div>
+            </div>
+        `;
+    }
+}
+
+// 页面加载完成后执行
+document.addEventListener('DOMContentLoaded', function() {
+    loadLatestArtworks();
+    
+    // 按Enter键触发搜索
+    document.getElementById('ai-search-input').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            performAISearch();
+        }
+    });
+    
+    // 设置一些示例问题按钮的点击事件
+    document.querySelectorAll('.btn-outline-primary').forEach(btn => {
+        if (btn.textContent.includes('试试提问')) {
+            btn.onclick = function() {
+                setExample('介绍文艺复兴');
+            };
+        }
+    });
+});
+</script>
+{% endblock %}

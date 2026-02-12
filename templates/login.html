@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %} - 登录{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow">
+            <div class="card-body p-4">
+                <h3 class="card-title text-center mb-4">用户登录</h3>
+                
+                <form method="POST" action="{{ url_for('login') }}">
+                    <!-- 表单提交到 /login 路由 -->
+                    <div class="mb-3">
+                        <label for="username" class="form-label">用户名或邮箱</label>
+                        <input type="text" class="form-control" id="username" name="username" required 
+                               placeholder="请输入用户名或注册邮箱">
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">密码</label>
+                        <input type="password" class="form-control" id="password" name="password" required 
+                               placeholder="请输入密码">
+                    </div>
+                    <div class="d-grid mb-3">
+                        <button type="submit" class="btn btn-primary btn-lg">登录</button>
+                    </div>
+                    <div class="text-center">
+                        <a href="{{ url_for('register') }}" class="text-decoration-none">还没有账号？立即注册</a>
+                    </div>
+                </form>
+                
+                <!-- 演示备注 -->
+                <hr class="my-4">
+                <div class="alert alert-info mt-3">
+                    <small>
+                        <i class="fas fa-info-circle"></i> 
+                        <strong>大赛演示说明：</strong> 
+                        此为前端演示界面。如需完整后端登录验证，需在 `app.py` 中完善 `/login` 路由的用户验证逻辑（连接数据库比对用户名密码）。
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

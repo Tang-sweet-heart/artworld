@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %} - 申请成为审核员{% endblock %}
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg border-0">
+                <!-- 标题区域 -->
+                <div class="card-header bg-primary text-white text-center py-4">
+                    <h3 class="mb-0">
+                        <i class="fas fa-user-shield fa-lg me-2"></i>
+                        申请成为审核员
+                    </h3>
+                </div>
+                
+                <div class="card-body p-5">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            <div class="flash-messages mb-4">
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+                    
+                    <!-- 申请说明 -->
+                    <div class="alert alert-info mb-4">
+                        <h6 class="alert-heading"><i class="fas fa-info-circle me-2"></i>申请说明</h6>
+                        <p class="mb-0">成为审核员后，您将有权审核其他用户投稿的艺术作品。请认真填写申请理由，我们将根据您的申请内容进行审核。</p>
+                    </div>
+                    
+                    <!-- 申请表单 -->
+                    <form method="POST" action="{{ url_for('apply_reviewer') }}">
+                        <div class="mb-4">
+                            <label for="reason" class="form-label fw-bold">
+                                <i class="fas fa-pen-alt me-2"></i>申请理由 *
+                            </label>
+                            <textarea class="form-control" id="reason" name="reason" rows="8" 
+                                      placeholder="请说明您为什么想成为审核员，以及您的相关经验..."
+                                      required>{{ request.form.reason if request.form.reason }}</textarea>
+                            <div class="form-text">请详细描述您的申请理由，至少100个字符。</div>
+                        </div>
+                        
+                        <!-- 审核员权限说明 -->
+                        <div class="card border-primary mb-4">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0"><i class="fas fa-star me-2"></i>审核员权限</h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-unstyled mb-0">
+                                    <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>审核其他用户投稿的作品</li>
+                                    <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>查看所有待审作品列表</li>
+                                    <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>批准或拒绝作品投稿</li>
+                                    <li><i class="fas fa-check-circle text-success me-2"></i>参与社区内容管理</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <!-- 按钮组 -->
+                        <div class="d-grid gap-3 d-md-flex justify-content-center mt-5">
+                            <button type="submit" class="btn btn-primary btn-lg px-5">
+                                <i class="fas fa-paper-plane me-2"></i>提交申请
+                            </button>
+                            <a href="{{ url_for('user_center') }}" class="btn btn-outline-secondary btn-lg px-5">
+                                <i class="fas fa-arrow-left me-2"></i>返回个人中心
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- 额外说明 -->
+            <div class="mt-4 text-center text-muted">
+                <p class="small">
+                    <i class="fas fa-clock me-1"></i>我们将在3个工作日内处理您的申请，审核结果将通过系统消息通知您。
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    border-radius: 15px;
+}
+.card-header {
+    border-radius: 15px 15px 0 0 !important;
+}
+.form-control {
+    border-radius: 10px;
+    padding: 15px;
+}
+.form-control:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 0.25rem rgba(52, 152, 219, 0.25);
+}
+.btn-lg {
+    padding: 12px 30px;
+    border-radius: 10px;
+    font-weight: 500;
+}
+.alert-info {
+    border-radius: 10px;
+    border-left: 5px solid #3498db;
+}
+.shadow-lg {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 自动聚焦到申请理由文本框
+    const reasonTextarea = document.getElementById('reason');
+    if (reasonTextarea) {
+        reasonTextarea.focus();
+    }
+    
+    // 表单验证
+    const applyForm = document.querySelector('form');
+    if (applyForm) {
+        applyForm.addEventListener('submit', function(event) {
+            const reason = document.getElementById('reason').value.trim();
+            
+            if (reason.length < 100) {
+                event.preventDefault();
+                alert('申请理由需要至少100个字符，请详细说明。');
+                return false;
+            }
+            
+            return true;
+        });
+    }
+});
+</script>
+{% endblock %}

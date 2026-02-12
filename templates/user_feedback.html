@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %} - 用户反馈{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow">
+                <div class="card-body p-4">
+                    <h3 class="card-title text-center mb-4">用户反馈</h3>
+                    
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            <div class="flash-messages">
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+                    
+                    <form method="POST" action="{{ url_for('user_feedback') }}">
+                        <div class="mb-3">
+                            <label for="feedback_type" class="form-label">反馈类型 *</label>
+                            <select class="form-select" id="feedback_type" name="feedback_type" required>
+                                <option value="" selected disabled>请选择反馈类型</option>
+                                <!-- 删除"联系客服"选项 -->
+                                <option value="complaint">投诉建议</option>
+                                <option value="suggestion">功能建议</option>
+                                <option value="bug">问题报告</option>
+                                <option value="content">内容问题</option>
+                                <option value="other">其他</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="content" class="form-label">反馈内容 *</label>
+                            <textarea class="form-control" id="content" name="content" rows="6" 
+                                      placeholder="请详细描述您的反馈内容..." required></textarea>
+                            <div class="form-text">我们会认真阅读您的每一条反馈，并在3个工作日内回复。</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="contact_info" class="form-label">联系方式</label>
+                            <input type="text" class="form-control" id="contact_info" name="contact_info" 
+                                   placeholder="邮箱或电话（选填，用于回复您）">
+                            <div class="form-text">填写联系方式后，我们会通过邮件或电话回复您。</div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">提交反馈</button>
+                            <a href="{{ url_for('user_center') }}" class="btn btn-secondary">返回个人中心</a>
+                        </div>
+                    </form>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-headset"></i> 客服支持</h5>
+                            <p class="text-muted small">
+                                <strong>工作时间：</strong>周一至周五 9:00-18:00<br>
+                                <strong>邮箱：</strong> support@artworld.com<br>
+                                <strong>电话：</strong> 400-123-4567
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-lightbulb"></i> 反馈建议</h5>
+                            <ul class="small">
+                                <li>功能建议请详细描述使用场景</li>
+                                <li>问题报告请提供具体操作步骤</li>
+                                <li>投诉建议请说明具体情况</li>
+                                <li>内容问题请提供相关链接或描述</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.flash-messages {
+    margin-bottom: 20px;
+}
+.card {
+    border-radius: 15px;
+    border: none;
+}
+.card-title {
+    color: #2c3e50;
+    font-weight: 600;
+}
+.form-label {
+    font-weight: 500;
+    color: #495057;
+}
+.btn-primary {
+    background-color: #3498db;
+    border-color: #3498db;
+    padding: 10px;
+    font-weight: 500;
+}
+.btn-primary:hover {
+    background-color: #2980b9;
+    border-color: #2980b9;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 根据选择的反馈类型，动态调整文本域提示
+    const feedbackType = document.getElementById('feedback_type');
+    const contentTextarea = document.getElementById('content');
+    
+    feedbackType.addEventListener('change', function() {
+        const placeholderTexts = {
+            'complaint': '请详细描述您遇到的困扰或不满意的地方...',
+            'suggestion': '请详细描述您的功能建议和改进想法...',
+            'bug': '请详细描述遇到的问题、操作步骤和期望结果...',
+            'content': '请详细描述内容问题，提供相关链接或具体描述...',
+            'other': '请详细描述您的反馈内容...'
+        };
+        
+        contentTextarea.placeholder = placeholderTexts[this.value] || '请详细描述您的反馈内容...';
+    });
+});
+</script>
+{% endblock %}

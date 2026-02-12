@@ -1,0 +1,315 @@
+/* 主色调 */
+:root {
+    --primary-color: #6c5ce7;
+    --secondary-color: #a29bfe;
+    --accent-color: #fd79a8;
+    --success-color: #00b894;
+    --danger-color: #d63031;
+    --warning-color: #fdcb6e;
+    --info-color: #0984e3;
+}
+
+/* 全局样式 */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main.container {
+    flex: 1;
+}
+
+/* 导航栏 */
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+
+.navbar-nav .nav-link {
+    padding: 0.5rem 1rem;
+}
+
+/* 用户头像在导航栏 */
+.navbar .dropdown-toggle img {
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+/* 卡片效果 */
+.card {
+    border: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* 为已通过的作品卡片添加特殊样式 */
+.card.border-success { 
+    box-shadow: 0 4px 8px rgba(25, 135, 84, 0.15); 
+}
+
+.card.border-success:hover { 
+    box-shadow: 0 8px 16px rgba(25, 135, 84, 0.25); 
+}
+
+.card.border-warning { 
+    box-shadow: 0 4px 8px rgba(255, 193, 7, 0.15); 
+}
+
+.card.border-warning:hover { 
+    box-shadow: 0 8px 16px rgba(255, 193, 7, 0.25); 
+}
+
+/* 图片区域的样式 */
+.card-img-top {
+    background-color: #f8f9fa;
+    height: 200px;
+    object-fit: cover;
+}
+
+.card-img-top-placeholder {
+    background: linear-gradient(45deg, #f1f2f6, #dfe4ea);
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #747d8c;
+}
+
+/* 按钮样式 */
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    border-radius: 8px;
+    padding: 0.5rem 1.5rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: #5b4bdb;
+    border-color: #5b4bdb;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(108, 92, 231, 0.3);
+}
+
+.btn-success {
+    background-color: var(--success-color);
+    border-color: var(--success-color);
+    border-radius: 8px;
+}
+
+.btn-success:hover {
+    background-color: #00a085;
+    border-color: #00a085;
+}
+
+.btn-danger {
+    background-color: var(--danger-color);
+    border-color: var(--danger-color);
+    border-radius: 8px;
+}
+
+.btn-danger:hover {
+    background-color: #c0392b;
+    border-color: #c0392b;
+}
+
+.btn-outline-primary {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+    border-radius: 8px;
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+/* 搜索框 */
+.search-box {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* 艺术作品卡片 */
+.artwork-card img {
+    border-radius: 8px 8px 0 0;
+}
+
+/* 表单样式 */
+.form-control {
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(108, 92, 231, 0.25);
+}
+
+.form-label {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #2d3436;
+}
+
+/* 徽章样式 */
+.badge {
+    padding: 0.5em 0.8em;
+    font-weight: 600;
+    border-radius: 20px;
+}
+
+.badge.bg-success {
+    background-color: var(--success-color) !important;
+}
+
+.badge.bg-warning {
+    background-color: var(--warning-color) !important;
+    color: #2d3436;
+}
+
+.badge.bg-info {
+    background-color: var(--info-color) !important;
+}
+
+/* 表格样式 */
+.table {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.table thead th {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 1rem;
+}
+
+.table tbody tr:hover {
+    background-color: rgba(108, 92, 231, 0.05);
+}
+
+/* 模态框样式 */
+.modal-content {
+    border-radius: 12px;
+    border: none;
+}
+
+.modal-header {
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 12px 12px 0 0;
+}
+
+.modal-header .btn-close {
+    filter: invert(1);
+}
+
+/* 警告框样式 */
+.alert {
+    border-radius: 8px;
+    border: none;
+    padding: 1rem 1.25rem;
+}
+
+.alert-success {
+    background-color: rgba(0, 184, 148, 0.15);
+    color: #00b894;
+    border-left: 4px solid #00b894;
+}
+
+.alert-danger {
+    background-color: rgba(214, 48, 49, 0.15);
+    color: #d63031;
+    border-left: 4px solid #d63031;
+}
+
+.alert-warning {
+    background-color: rgba(253, 203, 110, 0.15);
+    color: #e17055;
+    border-left: 4px solid #e17055;
+}
+
+.alert-info {
+    background-color: rgba(9, 132, 227, 0.15);
+    color: #0984e3;
+    border-left: 4px solid #0984e3;
+}
+
+/* 页脚样式 */
+footer {
+    margin-top: auto;
+}
+
+footer a:hover {
+    color: var(--secondary-color) !important;
+    text-decoration: underline;
+}
+
+/* 用户头像 */
+.rounded-circle {
+    object-fit: cover;
+}
+
+/* 加载动画 */
+.spinner-border {
+    border-width: 0.2em;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .hero-section h1 {
+        font-size: 2rem;
+    }
+    
+    .card {
+        margin-bottom: 1rem;
+    }
+    
+    .navbar-nav .nav-link {
+        padding: 0.5rem 0;
+    }
+    
+    .card-img-top,
+    .card-img-top-placeholder {
+        height: 160px;
+    }
+    
+    .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .d-md-flex .btn {
+        width: auto;
+    }
+}
+
+@media (max-width: 576px) {
+    .container {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    
+    h1, .h1 { font-size: 1.75rem; }
+    h2, .h2 { font-size: 1.5rem; }
+    h3, .h3 { font-size: 1.25rem; }
+    
+    .card-body {
+        padding: 1rem;
+    }
+}

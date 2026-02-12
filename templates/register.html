@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %} - 注册{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow">
+            <div class="card-body p-4">
+                <h3 class="card-title text-center mb-4">注册新账号</h3>
+                
+                <form method="POST" action="{{ url_for('register') }}">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="username" class="form-label">用户名 *</label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                            <div class="form-text">用于登录和显示，3-20个字符。</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">电子邮箱 *</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="password" class="form-label">密码 *</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="confirm_password" class="form-label">确认密码 *</label>
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="real_name" class="form-label">真实姓名（可选）</label>
+                        <input type="text" class="form-control" id="real_name" name="real_name">
+                        <div class="form-text">用于投稿和审核身份核实。</div>
+                    </div>
+                    
+                    <div class="form-check mb-4">
+                        <input class="form-check-input" type="checkbox" id="agree_terms" required>
+                        <label class="form-check-label" for="agree_terms">
+                            我已阅读并同意 <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">《服务条款》</a>
+                        </label>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success btn-lg">注册账号</button>
+                    </div>
+                </form>
+                
+                <!-- 演示备注 -->
+                <hr class="my-4">
+                <div class="alert alert-info mt-3">
+                    <small>
+                        <i class="fas fa-info-circle"></i> 
+                        <strong>功能实现说明：</strong> 
+                        此表单将数据提交到 `/register` 路由。你需要在 `app.py` 的 `register` 函数中编写逻辑，将用户数据（密码需加密）保存至 `User` 数据库表，并实现邮件验证（可选）。
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

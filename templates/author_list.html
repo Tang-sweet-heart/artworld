@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %} - 艺术家{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-user-tie"></i> 艺术家档案</h1>
+    <div class="col-md-4">
+        <div class="input-group">
+            <input type="text" id="author-search" class="form-control" placeholder="搜索艺术家...">
+            <button class="btn btn-primary" onclick="searchAuthors()">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 时代筛选 -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <select class="form-select" id="era-filter" onchange="filterAuthors()">
+            <option value="">所有时代</option>
+            <option value="文艺复兴">文艺复兴</option>
+            <option value="印象派">印象派</option>
+            <option value="现代艺术">现代艺术</option>
+            <option value="当代艺术">当代艺术</option>
+            <!-- 【可在此添加更多选项】 -->
+        </select>
+    </div>
+    <div class="col-md-3">
+        <select class="form-select" id="country-filter" onchange="filterAuthors()">
+            <option value="">所有国家</option>
+            <option value="意大利">意大利</option>
+            <option value="荷兰">荷兰</option>
+            <option value="法国">法国</option>
+            <option value="中国">中国</option>
+            <!-- 【可在此添加更多选项】 -->
+        </select>
+    </div>
+</div>
+
+<!-- 艺术家列表 -->
+<div class="row" id="authors-container">
+    {% for author in authors %}
+    <div class="col-lg-4 col-md-6 mb-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">{{ author.name }}</h5>
+                <p class="card-text">
+                    <i class="fas fa-globe"></i> <strong>国家/地区:</strong> {{ author.country or '未知' }}<br>
+                    <i class="fas fa-clock"></i> <strong>艺术时代:</strong> {{ author.era or '未知' }}<br>
+                    {% if author.birth_year %}
+                    <i class="fas fa-calendar"></i> <strong>生卒:</strong> {{ author.birth_year }} - {{ author.death_year or '至今' }}
+                    {% endif %}
+                </p>
+                <p class="card-text text-muted">{{ (author.biography or '暂无详细生平介绍。')[:100] }}...</p>
+            </div>
+            <div class="card-footer bg-transparent">
+                <a href="/author/{{ author.id }}" class="btn btn-outline-primary btn-sm">查看详情</a>
+                <a href="/artworks?artist={{ author.name }}" class="btn btn-outline-secondary btn-sm">查看作品</a>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- 如果没有作者数据，显示提示 -->
+    <div class="col-12">
+        <div class="alert alert-info">
+            暂无艺术家数据。
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// 简单的客户端筛选功能（实际项目应使用后端筛选）
+function filterAuthors() {
+    const era = document.getElementById('era-filter').value;
+    const country = document.getElementById('country-filter').value;
+    alert(`筛选条件：时代=${era}, 国家=${country}\n\n（此为前端演示，完整功能需连接后端筛选接口。）`);
+}
+
+function searchAuthors() {
+    const query = document.getElementById('author-search').value;
+    if (query) {
+        // 在实际项目中，这里应跳转到带搜索参数的后端路由，如 /authors?q=query
+        alert(`搜索艺术家: ${query}\n\n（搜索功能需连接后端实现。）`);
+    }
+}
+</script>
+{% endblock %}

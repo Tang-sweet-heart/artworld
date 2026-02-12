@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>实名认证 - 艺术与世界</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        /* 实名认证页面专用样式 */
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .auth-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+        
+        .auth-form-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            margin-top: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            font-weight: 700;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #4a90e2;
+            position: relative;
+        }
+        
+        h1:after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 2px;
+            background: linear-gradient(90deg, #4a90e2, #357ae8);
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+            font-size: 16px;
+        }
+        
+        .form-group input {
+            width: 100%;
+            height: 50px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            padding: 12px 15px;
+            font-size: 16px;
+            transition: all 0.3s;
+            box-sizing: border-box;
+        }
+        
+        .form-group input:focus {
+            border-color: #4a90e2;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+            outline: none;
+        }
+        
+        .form-note {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 10px;
+            padding: 25px;
+            margin: 30px 0;
+            border-left: 5px solid #4a90e2;
+        }
+        
+        .form-note h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        .form-note ul {
+            list-style-type: none;
+            padding-left: 5px;
+        }
+        
+        .form-note li {
+            padding: 8px 0;
+            color: #555;
+            position: relative;
+            padding-left: 25px;
+        }
+        
+        .form-note li:before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #4a90e2;
+            font-weight: bold;
+        }
+        
+        .form-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .form-buttons .btn {
+            flex: 1;
+            height: 50px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #4a90e2, #357ae8);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #357ae8, #2a65d0);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(74, 144, 226, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #555;
+            border: 1px solid #ddd !important;
+        }
+        
+        .btn-secondary:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .auth-status {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+        
+        .auth-status h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 10px 25px;
+            border-radius: 25px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        .verified {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+        }
+        
+        .pending {
+            background: linear-gradient(135deg, #ffc107, #fd7e14);
+            color: white;
+        }
+        
+        .not-verified {
+            background: linear-gradient(135deg, #dc3545, #e83e8c);
+            color: white;
+        }
+        
+        .alert {
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        
+        .alert-error, .alert-danger {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        
+        .alert-info {
+            background-color: #d1ecf1;
+            border-color: #bee5eb;
+            color: #0c5460;
+        }
+        
+        .alert-warning {
+            background-color: #fff3cd;
+            border-color: #ffeaa7;
+            color: #856404;
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .auth-container {
+                padding: 15px;
+            }
+            
+            .auth-form-container {
+                padding: 25px;
+            }
+            
+            .form-buttons {
+                flex-direction: column;
+            }
+            
+            body {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="auth-container">
+            <h1>实名认证</h1>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+            
+            <div class="auth-form-container">
+                <form method="POST" action="{{ url_for('real_name_auth') }}" class="auth-form">
+                    <div class="form-group">
+                        <label for="real_name">真实姓名 *</label>
+                        <input type="text" id="real_name" name="real_name" 
+                               value="{{ user.real_name or '' }}" required
+                               placeholder="请输入您的真实姓名">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_card">身份证号 *</label>
+                        <input type="text" id="id_card" name="id_card" 
+                               value="{{ user.id_card or '' }}" required
+                               placeholder="请输入18位身份证号码" maxlength="18">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="phone">手机号 *</label>
+                        <input type="tel" id="phone" name="phone" 
+                               value="{{ user.phone or '' }}" required
+                               placeholder="请输入11位手机号码" maxlength="11">
+                    </div>
+                    
+                    <div class="form-note">
+                        <h3>认证说明：</h3>
+                        <ul>
+                            <li>实名认证后，您可以获得认证用户标识</li>
+                            <li>认证信息将严格保密，仅用于身份验证</li>
+                            <li>请确保填写的信息真实有效</li>
+                            <li>认证审核通常需要1-3个工作日</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="form-buttons">
+                        <button type="submit" class="btn btn-primary">提交认证</button>
+                        <a href="{{ url_for('user_center') }}" class="btn btn-secondary">返回</a>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="auth-status">
+                <h3>认证状态</h3>
+                {% if user.is_verified %}
+                    <div class="status-badge verified">
+                        <span>✓ 已认证</span>
+                    </div>
+                    <p>您的实名认证已通过审核</p>
+                {% elif user.real_name %}
+                    <div class="status-badge pending">
+                        <span>⏳ 审核中</span>
+                    </div>
+                    <p>您的认证信息已提交，正在审核中</p>
+                {% else %}
+                    <div class="status-badge not-verified">
+                        <span>✗ 未认证</span>
+                    </div>
+                    <p>您尚未进行实名认证</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>

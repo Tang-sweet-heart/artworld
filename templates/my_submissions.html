@@ -1,0 +1,619 @@
+{% extends "base.html" %}
+{% block title %} - 我的投稿{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">我的投稿作品</h2>
+    
+    <!-- 显示消息 -->
+    {% if message %}
+    <div class="alert alert-{{ message_type }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endif %}
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <!-- 统计卡片 -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h5 class="card-title">总投稿数</h5>
+                    <p class="card-text display-6">{{ total }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h5 class="card-title">已通过</h5>
+                    <p class="card-text display-6">{{ approved }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <h5 class="card-title">待审核</h5>
+                    <p class="card-text display-6">{{ pending }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h5 class="card-title">操作指南</h5>
+                    <p class="card-text small mt-2">
+                        <i class="fas fa-info-circle"></i> 可撤回待审作品
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 投稿按钮 -->
+    <div class="d-flex justify-content-between mb-4">
+        <a href="{{ url_for('submit_artwork') }}" class="btn btn-success">
+            <i class="fas fa-plus"></i> 投稿新作品
+        </a>
+        <a href="{{ url_for('user_center') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> 返回个人中心
+        </a>
+    </div>
+    
+    {% if submissions and submissions|length > 0 %}
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>作品标题</th>
+                            <th>艺术家</th>
+                            <th>状态</th>
+                            <th>投稿时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for artwork in submissions %}
+                        <tr id="artwork-{{ artwork.id }}">
+                            <td>{{ loop.index }}</td>
+                            <td>
+                                <strong>{{ artwork.title }}</strong>
+                                {% if artwork.year %}
+                                <span class="text-muted">({{ artwork.year }})</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if artwork.artist_info %}
+                                    {{ artwork.artist_info.name }}
+                                {% elif artwork.artist %}
+                                    {{ artwork.artist.name }}
+                                {% else %}
+                                    未知艺术家
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if artwork.is_approved %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check"></i> 已通过
+                                </span>
+                                {% else %}
+                                <span class="badge bg-warning">
+                                    <i class="fas fa-clock"></i> 待审核
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>{{ artwork.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="{{ url_for('artwork_detail', artwork_id=artwork.id) }}" 
+                                       class="btn btn-outline-primary" target="_blank">
+                                        <i class="fas fa-eye"></i> 查看
+                                    </a>
+                                    
+                                    {% if not artwork.is_approved %}
+                                    <!-- 待审作品：显示撤回按钮 -->
+                                    <button type="button" 
+                                            class="btn btn-outline-warning" 
+                                            onclick="withdrawArtwork({{ artwork.id }}, '{{ artwork.title|replace("'", "&#39;") }}')">
+                                        <i class="fas fa-undo"></i> 撤回
+                                    </button>
+                                    {% else %}
+                                    <!-- 已审核作品：显示删除按钮 -->
+                                    <button type="button" 
+                                            class="btn btn-outline-danger" 
+                                            onclick="deleteArtwork({{ artwork.id }}, '{{ artwork.title|replace("'", "&#39;") }}')">
+                                        <i class="fas fa-trash"></i> 删除
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        
+                        <!-- 作品详情行（可折叠） -->
+                        <tr class="bg-light">
+                            <td colspan="6">
+                                <div class="collapse" id="details-{{ artwork.id }}">
+                                    <div class="p-3">
+                                        <div class="row">
+                                            {% if artwork.image_url %}
+                                            <div class="col-md-3">
+                                                <img src="{{ artwork.image_url }}" 
+                                                     alt="{{ artwork.title }}" 
+                                                     class="img-fluid rounded"
+                                                     onerror="this.src='/static/images/default.jpg'"
+                                                     style="max-height: 150px; object-fit: cover;">
+                                            </div>
+                                            {% endif %}
+                                            <div class="col">
+                                                <h6>作品详情</h6>
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <p><strong>风格：</strong> {{ artwork.style or '未注明' }}</p>
+                                                        <p><strong>媒介：</strong> {{ artwork.medium or '未注明' }}</p>
+                                                        <p><strong>尺寸：</strong> {{ artwork.dimensions or '未注明' }}</p>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <p><strong>收藏地：</strong> {{ artwork.location or '未注明' }}</p>
+                                                        <p><strong>审核状态：</strong> 
+                                                            {% if artwork.is_approved %}
+                                                            <span class="text-success">已审核通过</span>
+                                                            {% else %}
+                                                            <span class="text-warning">等待审核中</span>
+                                                            {% endif %}
+                                                        </p>
+                                                        <p><strong>投稿时间：</strong> {{ artwork.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                                                    </div>
+                                                </div>
+                                                {% if artwork.description %}
+                                                <div class="mt-2">
+                                                    <strong>描述：</strong>
+                                                    <p class="mb-0">{{ artwork.description|truncate(300) }}</p>
+                                                </div>
+                                                {% endif %}
+                                                <button class="btn btn-sm btn-outline-secondary mt-2" 
+                                                        type="button" 
+                                                        data-bs-toggle="collapse" 
+                                                        data-bs-target="#details-{{ artwork.id }}">
+                                                    收起详情
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-sm btn-link p-0" 
+                                        type="button" 
+                                        data-bs-toggle="collapse" 
+                                        data-bs-target="#details-{{ artwork.id }}">
+                                    <i class="fas fa-chevron-down"></i> 展开详情
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 批量操作 -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="mb-0">批量操作</h5>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>注意：</strong> 批量操作不可撤销，请谨慎使用。
+            </div>
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-outline-warning" onclick="batchWithdrawPending()">
+                    <i class="fas fa-undo"></i> 批量撤回待审作品
+                </button>
+                <button type="button" class="btn btn-outline-danger" onclick="batchDeleteApproved()">
+                    <i class="fas fa-trash"></i> 批量删除已通过作品
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    {% else %}
+    <div class="alert alert-info">
+        <h4 class="alert-heading">您还没有投稿作品</h4>
+        <p>开始分享您的艺术作品吧！投稿的作品将在审核通过后展示给所有用户。</p>
+        <hr>
+        <div class="d-flex justify-content-between">
+            <a href="{{ url_for('submit_artwork') }}" class="btn btn-success">
+                <i class="fas fa-plus"></i> 立即投稿
+            </a>
+            <a href="{{ url_for('user_center') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> 返回个人中心
+            </a>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- 操作说明 -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-info-circle"></i> 操作说明</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6><i class="fas fa-undo text-warning"></i> 撤回功能</h6>
+                    <ul class="small">
+                        <li>只能撤回<strong>待审核</strong>状态的作品</li>
+                        <li>撤回后作品将从系统中删除</li>
+                        <li>已审核的作品不能撤回</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6><i class="fas fa-trash text-danger"></i> 删除功能</h6>
+                    <ul class="small">
+                        <li>可以删除<strong>已通过审核</strong>的作品</li>
+                        <li>删除后作品将从系统中永久移除</li>
+                        <li>如需恢复，请联系管理员</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 确认撤回模态框 -->
+<div class="modal fade" id="withdrawConfirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">确认撤回作品</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>您确定要撤回作品《<span id="withdrawArtworkTitle"></span>》吗？</p>
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    撤回后，该作品将从系统中删除，且无法恢复。
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-warning" id="confirmWithdrawBtn">确认撤回</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 确认删除模态框 -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">确认删除作品</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>您确定要删除作品《<span id="deleteArtworkTitle"></span>》吗？</p>
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    删除后，该作品将从系统中永久移除，且无法恢复。
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">确认删除</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// 当前要操作的作品ID
+let currentArtworkId = null;
+let currentArtworkTitle = null;
+
+// 撤回作品
+function withdrawArtwork(artworkId, artworkTitle) {
+    currentArtworkId = artworkId;
+    currentArtworkTitle = artworkTitle;
+    
+    // 显示确认模态框
+    document.getElementById('withdrawArtworkTitle').textContent = artworkTitle;
+    const modal = new bootstrap.Modal(document.getElementById('withdrawConfirmModal'));
+    modal.show();
+}
+
+// 确认撤回
+document.getElementById('confirmWithdrawBtn').addEventListener('click', function() {
+    if (!currentArtworkId) return;
+    
+    fetch(`/api/artwork/${currentArtworkId}/withdraw`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // 从页面中移除作品行
+            const artworkRow = document.getElementById(`artwork-${currentArtworkId}`);
+            if (artworkRow) {
+                // 获取作品行和详情行
+                const row = artworkRow;
+                const detailRow = row.nextElementSibling;
+                
+                // 移除两行
+                row.remove();
+                if (detailRow && detailRow.classList.contains('bg-light')) {
+                    detailRow.remove();
+                }
+            }
+            
+            // 隐藏模态框
+            const modal = bootstrap.Modal.getInstance(document.getElementById('withdrawConfirmModal'));
+            modal.hide();
+            
+            // 显示成功消息
+            alert('作品已成功撤回！');
+            
+            // 如果没有作品了，显示空状态
+            setTimeout(function() {
+                const rows = document.querySelectorAll('tbody tr');
+                if (rows.length === 0) {
+                    location.reload(); // 刷新页面显示空状态
+                }
+            }, 100);
+            
+        } else {
+            alert('撤回失败：' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('撤回过程中出现错误');
+    });
+});
+
+// 删除作品
+function deleteArtwork(artworkId, artworkTitle) {
+    currentArtworkId = artworkId;
+    currentArtworkTitle = artworkTitle;
+    
+    // 显示确认模态框
+    document.getElementById('deleteArtworkTitle').textContent = artworkTitle;
+    const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+    modal.show();
+}
+
+// 确认删除
+document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+    if (!currentArtworkId) return;
+    
+    fetch(`/api/artwork/${currentArtworkId}/delete`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // 从页面中移除作品行
+            const artworkRow = document.getElementById(`artwork-${currentArtworkId}`);
+            if (artworkRow) {
+                // 获取作品行和详情行
+                const row = artworkRow;
+                const detailRow = row.nextElementSibling;
+                
+                // 移除两行
+                row.remove();
+                if (detailRow && detailRow.classList.contains('bg-light')) {
+                    detailRow.remove();
+                }
+            }
+            
+            // 隐藏模态框
+            const modal = bootstrap.Modal.getInstance(document.getElementById('deleteConfirmModal'));
+            modal.hide();
+            
+            // 显示成功消息
+            alert('作品已成功删除！');
+            
+            // 如果没有作品了，显示空状态
+            setTimeout(function() {
+                const rows = document.querySelectorAll('tbody tr');
+                if (rows.length === 0) {
+                    location.reload(); // 刷新页面显示空状态
+                }
+            }, 100);
+            
+        } else {
+            alert('删除失败：' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('删除过程中出现错误');
+    });
+});
+
+// 批量撤回所有待审作品
+function batchWithdrawPending() {
+    if (!confirm('确定要批量撤回所有待审作品吗？\n\n此操作将撤回您所有待审核的作品，且不可恢复。')) {
+        return;
+    }
+    
+    // 获取所有待审作品的ID
+    const pendingButtons = document.querySelectorAll('.btn-outline-warning');
+    const pendingIds = [];
+    
+    pendingButtons.forEach(button => {
+        const onclickText = button.getAttribute('onclick');
+        if (onclickText && onclickText.includes('withdrawArtwork')) {
+            const match = onclickText.match(/withdrawArtwork\((\d+),/);
+            if (match && match[1]) {
+                pendingIds.push(parseInt(match[1]));
+            }
+        }
+    });
+    
+    if (pendingIds.length === 0) {
+        alert('没有找到待撤回的作品！');
+        return;
+    }
+    
+    // 逐个撤回
+    let successCount = 0;
+    let errorCount = 0;
+    
+    pendingIds.forEach(artworkId => {
+        fetch(`/api/artwork/${artworkId}/withdraw`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                successCount++;
+            } else {
+                errorCount++;
+            }
+            
+            // 最后一个请求完成后显示结果
+            if (successCount + errorCount === pendingIds.length) {
+                alert(`批量撤回完成！\n成功：${successCount}个\n失败：${errorCount}个`);
+                if (successCount > 0) {
+                    location.reload(); // 刷新页面
+                }
+            }
+        })
+        .catch(error => {
+            errorCount++;
+            
+            // 最后一个请求完成后显示结果
+            if (successCount + errorCount === pendingIds.length) {
+                alert(`批量撤回完成！\n成功：${successCount}个\n失败：${errorCount}个`);
+                if (successCount > 0) {
+                    location.reload(); // 刷新页面
+                }
+            }
+        });
+    });
+}
+
+// 批量删除所有已通过作品
+function batchDeleteApproved() {
+    if (!confirm('确定要批量删除所有已通过作品吗？\n\n此操作将删除您所有已审核通过的作品，且不可恢复。')) {
+        return;
+    }
+    
+    // 获取所有已通过作品的ID
+    const approvedButtons = document.querySelectorAll('.btn-outline-danger');
+    const approvedIds = [];
+    
+    approvedButtons.forEach(button => {
+        const onclickText = button.getAttribute('onclick');
+        if (onclickText && onclickText.includes('deleteArtwork')) {
+            const match = onclickText.match(/deleteArtwork\((\d+),/);
+            if (match && match[1]) {
+                approvedIds.push(parseInt(match[1]));
+            }
+        }
+    });
+    
+    if (approvedIds.length === 0) {
+        alert('没有找到要删除的作品！');
+        return;
+    }
+    
+    // 逐个删除
+    let successCount = 0;
+    let errorCount = 0;
+    
+    approvedIds.forEach(artworkId => {
+        fetch(`/api/artwork/${artworkId}/delete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                successCount++;
+            } else {
+                errorCount++;
+            }
+            
+            // 最后一个请求完成后显示结果
+            if (successCount + errorCount === approvedIds.length) {
+                alert(`批量删除完成！\n成功：${successCount}个\n失败：${errorCount}个`);
+                if (successCount > 0) {
+                    location.reload(); // 刷新页面
+                }
+            }
+        })
+        .catch(error => {
+            errorCount++;
+            
+            // 最后一个请求完成后显示结果
+            if (successCount + errorCount === approvedIds.length) {
+                alert(`批量删除完成！\n成功：${successCount}个\n失败：${errorCount}个`);
+                if (successCount > 0) {
+                    location.reload(); // 刷新页面
+                }
+            }
+        });
+    });
+}
+
+// 页面加载完成后执行
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('我的投稿页面已加载');
+    
+    // 自动隐藏消息，3秒后消失
+    setTimeout(function() {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(function(alert) {
+            const bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+        });
+    }, 3000);
+    
+    // 为详情切换按钮添加图标切换
+    const detailToggleButtons = document.querySelectorAll('[data-bs-toggle="collapse"]');
+    detailToggleButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const icon = this.querySelector('i');
+            if (icon) {
+                if (this.getAttribute('aria-expanded') === 'true') {
+                    icon.className = 'fas fa-chevron-up';
+                    this.innerHTML = '<i class="fas fa-chevron-up"></i> 收起详情';
+                } else {
+                    icon.className = 'fas fa-chevron-down';
+                    this.innerHTML = '<i class="fas fa-chevron-down"></i> 展开详情';
+                }
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

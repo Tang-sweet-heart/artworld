@@ -1,0 +1,490 @@
+{% extends "base.html" %}
+{% block title %} - 待审作品{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">待审核作品列表</h2>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <!-- 统计信息卡片 -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">待审作品</h5>
+                    <p class="card-text display-6" id="statPendingCount">{{ pending_count }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">今日新增</h5>
+                    <p class="card-text display-6" id="statTodayNew">0</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">已审核</h5>
+                    <p class="card-text display-6" id="statApproved">0</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if artworks and artworks|length > 0 %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>作品标题</th>
+                    <th>艺术家</th>
+                    <th>投稿人</th>
+                    <th>投稿时间</th>
+                    <th>信息来源</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for artwork in artworks %}
+                <tr id="artwork-row-{{ artwork.id }}">
+                    <td>{{ artwork.id }}</td>
+                    <td>
+                        <strong>{{ artwork.title }}</strong>
+                        {% if artwork.year %}
+                            <span class="text-muted">({{ artwork.year }})</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if artwork.artist %}
+                            {{ artwork.artist.name }}
+                        {% else %}
+                            未知艺术家
+                        {% endif %}
+                    </td>
+                    <td>
+                        {{ artwork.submitter_username or "未知用户" }}
+                    </td>
+                    <td>{{ artwork.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>
+                        {% if artwork.source %}
+                            <span class="badge bg-info text-dark">{{ artwork.source }}</span>
+                        {% else %}
+                            <span class="badge bg-secondary">未注明</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <a href="{{ url_for('artwork_detail', artwork_id=artwork.id) }}" 
+                               class="btn btn-outline-primary" target="_blank">
+                                <i class="fas fa-eye"></i> 查看
+                            </a>
+                            <button type="button" class="btn btn-outline-success" 
+                                    onclick="approveArtwork({{ artwork.id }}, '{{ artwork.title|replace("'", "\\'") }}')">
+                                <i class="fas fa-check"></i> 通过
+                            </button>
+                            <button type="button" class="btn btn-outline-danger" 
+                                    onclick="rejectArtwork({{ artwork.id }}, '{{ artwork.title|replace("'", "\\'") }}')">
+                                <i class="fas fa-times"></i> 拒绝
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                <!-- 作品详情折叠行 -->
+                <tr class="bg-light">
+                    <td colspan="7">
+                        <div class="collapse" id="details{{ artwork.id }}">
+                            <div class="p-3">
+                                <h5>作品详情</h5>
+                                <div class="row">
+                                    {% if artwork.image_url %}
+                                    <div class="col-md-3">
+                                        <img src="{{ artwork.image_url }}" alt="{{ artwork.title }}" 
+                                             class="img-fluid rounded mb-3" 
+                                             style="max-height: 200px; object-fit: cover;"
+                                             onerror="this.src='/static/images/default.jpg'">
+                                    </div>
+                                    {% endif %}
+                                    <div class="col">
+                                        <p><strong>投稿人：</strong> {{ artwork.submitter_username }}</p>
+                                        <p><strong>风格：</strong> {{ artwork.style or '未注明' }}</p>
+                                        <p><strong>媒介：</strong> {{ artwork.medium or '未注明' }}</p>
+                                        <p><strong>尺寸：</strong> {{ artwork.dimensions or '未注明' }}</p>
+                                        <p><strong>收藏地：</strong> {{ artwork.location or '未注明' }}</p>
+                                        {% if artwork.description %}
+                                        <p><strong>描述：</strong> {{ artwork.description|truncate(200) }}</p>
+                                        {% endif %}
+                                        <button class="btn btn-sm btn-outline-secondary" 
+                                                type="button" 
+                                                data-bs-toggle="collapse" 
+                                                data-bs-target="#details{{ artwork.id }}">
+                                            收起详情
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn btn-sm btn-link p-0" 
+                                type="button" 
+                                data-bs-toggle="collapse" 
+                                data-bs-target="#details{{ artwork.id }}">
+                            展开详情 <i class="fas fa-chevron-down"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- 批量操作区域 -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="mb-0">批量操作</h5>
+        </div>
+        <div class="card-body">
+            <p class="text-muted">请谨慎使用批量操作功能。</p>
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#batchApproveModal">
+                    <i class="fas fa-check-double"></i> 批量通过
+                </button>
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#batchRejectModal">
+                    <i class="fas fa-ban"></i> 批量拒绝
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    {% else %}
+    <div class="alert alert-success">
+        <h4 class="alert-heading">太好了！</h4>
+        <p>目前没有待审核的作品，所有投稿都已处理完毕。</p>
+        <hr>
+        <p class="mb-0">您可以返回 <a href="{{ url_for('user_center') }}" class="alert-link">个人中心</a> 或继续 <a href="{{ url_for('index') }}" class="alert-link">浏览网站</a>。</p>
+    </div>
+    {% endif %}
+    
+    <div class="mt-4">
+        <a href="{{ url_for('user_center') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> 返回个人中心
+        </a>
+    </div>
+</div>
+
+<!-- 批量通过确认模态框 -->
+<div class="modal fade" id="batchApproveModal" tabindex="-1" aria-labelledby="batchApproveModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="batchApproveModalLabel">批量通过作品</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>您确定要批量通过所有待审核作品吗？</p>
+                <p class="text-danger"><strong>警告：</strong>此操作将一次性通过所有{{ artworks|length if artworks else 0 }}件待审作品，请确保您已仔细审核过所有内容。</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <form method="POST" action="#" onsubmit="return batchApprove(event)" style="display: inline;">
+                    <button type="submit" class="btn btn-success">确认批量通过</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 批量拒绝确认模态框 -->
+<div class="modal fade" id="batchRejectModal" tabindex="-1" aria-labelledby="batchRejectModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="batchRejectModalLabel">批量拒绝作品</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>您确定要批量拒绝所有待审核作品吗？</p>
+                <p class="text-danger"><strong>警告：</strong>此操作将一次性拒绝所有{{ artworks|length if artworks else 0 }}件待审作品，被拒绝的作品将被删除且不可恢复。</p>
+                <div class="mb-3">
+                    <label for="batchRejectReason" class="form-label">拒绝原因（可选）：</label>
+                    <textarea class="form-control" id="batchRejectReason" name="reject_reason" rows="3" placeholder="请输入批量拒绝的原因..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <form method="POST" action="#" onsubmit="return batchReject(event)" style="display: inline;">
+                    <input type="hidden" name="reject_reason" id="hiddenBatchRejectReason">
+                    <button type="button" class="btn btn-danger" onclick="submitBatchReject()">确认批量拒绝</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// 更新统计数字显示
+function updateStatsDisplay(stats) {
+    if (stats) {
+        if (stats.pending_count !== undefined) {
+            const pendingElement = document.getElementById('statPendingCount');
+            if (pendingElement) {
+                pendingElement.textContent = stats.pending_count;
+            }
+        }
+        if (stats.approved_count !== undefined) {
+            const approvedElement = document.getElementById('statApproved');
+            if (approvedElement) {
+                approvedElement.textContent = stats.approved_count;
+            }
+        }
+        if (stats.today_new_count !== undefined) {
+            const todayNewElement = document.getElementById('statTodayNew');
+            if (todayNewElement) {
+                todayNewElement.textContent = stats.today_new_count;
+            }
+        }
+    }
+}
+
+// 通过作品审核
+function approveArtwork(artworkId, title) {
+    if (confirm('确认审核通过《' + title + '》？')) {
+        fetch('/api/artwork/' + artworkId + '/approve', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // 从页面中移除已审核的作品行
+                const artworkRow = document.getElementById('artwork-row-' + artworkId);
+                if (artworkRow) {
+                    // 获取整个作品行（包括详情行）
+                    const row = artworkRow;
+                    const detailRow = row.nextElementSibling;
+                    
+                    // 移除作品行和详情行
+                    row.remove();
+                    if (detailRow && detailRow.classList.contains('bg-light')) {
+                        detailRow.remove();
+                    }
+                }
+                
+                // 更新统计数字
+                if (data.stats) {
+                    updateStatsDisplay(data.stats);
+                    
+                    // 发送消息给个人中心页面（如果它在iframe或新窗口中打开）
+                    try {
+                        window.parent.postMessage({
+                            type: 'stats_updated',
+                            stats: data.stats
+                        }, '*');
+                    } catch (e) {
+                        // 忽略跨域错误
+                    }
+                }
+                
+                // 显示成功消息
+                alert('作品已通过审核！');
+                
+                // 如果没有作品了，显示空状态
+                setTimeout(function() {
+                    const rows = document.querySelectorAll('tbody tr');
+                    if (rows.length === 0) {
+                        // 可以在这里显示"没有待审作品"的消息
+                        console.log('所有作品已审核完毕');
+                    }
+                }, 100);
+                
+            } else {
+                alert('操作失败：' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('操作失败，请稍后重试。');
+        });
+    }
+}
+
+// 拒绝作品审核
+function rejectArtwork(artworkId, title) {
+    const reason = prompt('请输入拒绝《' + title + '》的理由（可选）：');
+    if (reason !== null) {
+        fetch('/api/artwork/' + artworkId + '/reject', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ reason: reason || '' })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // 从页面中移除已拒绝的作品行
+                const artworkRow = document.getElementById('artwork-row-' + artworkId);
+                if (artworkRow) {
+                    // 获取整个作品行（包括详情行）
+                    const row = artworkRow;
+                    const detailRow = row.nextElementSibling;
+                    
+                    // 移除作品行和详情行
+                    row.remove();
+                    if (detailRow && detailRow.classList.contains('bg-light')) {
+                        detailRow.remove();
+                    }
+                }
+                
+                // 更新统计数字
+                if (data.stats) {
+                    updateStatsDisplay(data.stats);
+                    
+                    // 发送消息给个人中心页面
+                    try {
+                        window.parent.postMessage({
+                            type: 'stats_updated',
+                            stats: data.stats
+                        }, '*');
+                    } catch (e) {
+                        // 忽略跨域错误
+                    }
+                }
+                
+                // 显示成功消息
+                alert('作品已拒绝！');
+                
+                // 如果没有作品了，显示空状态
+                setTimeout(function() {
+                    const rows = document.querySelectorAll('tbody tr');
+                    if (rows.length === 0) {
+                        console.log('所有作品已处理完毕');
+                    }
+                }, 100);
+                
+            } else {
+                alert('操作失败：' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('操作失败，请稍后重试。');
+        });
+    }
+}
+
+// 批量通过作品
+function batchApprove(event) {
+    event.preventDefault();
+    if (confirm('确认批量通过所有待审核作品吗？\n\n警告：此操作将一次性通过所有作品，请确保您已仔细审核过所有内容。')) {
+        // 获取所有待审作品的ID
+        const artworkRows = document.querySelectorAll('[id^="artwork-row-"]');
+        const artworkIds = Array.from(artworkRows).map(row => {
+            const id = row.id.replace('artwork-row-', '');
+            return parseInt(id);
+        });
+        
+        if (artworkIds.length === 0) {
+            alert('没有待审核的作品！');
+            return false;
+        }
+        
+        // 批量通过
+        fetch('/api/batch-approve', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ artwork_ids: artworkIds })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('批量通过成功！');
+                location.reload();
+            } else {
+                alert('批量通过失败：' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('批量通过失败，请稍后重试。');
+        });
+    }
+    return false;
+}
+
+// 批量拒绝作品
+function batchReject(event) {
+    event.preventDefault();
+    alert('批量拒绝功能暂未实现，请使用单个拒绝功能。');
+    return false;
+}
+
+// 处理批量拒绝的表单提交（兼容旧代码）
+function submitBatchReject() {
+    alert('批量拒绝功能暂未实现，请使用单个拒绝功能。');
+}
+
+// 页面加载完成后，为所有通过按钮添加确认
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('审核页面已加载，待审作品数量：{{ pending_count }}');
+    
+    // 加载初始统计数字
+    loadInitialStats();
+    
+    // 为详情切换按钮添加图标切换
+    const detailToggleButtons = document.querySelectorAll('[data-bs-toggle="collapse"]');
+    detailToggleButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const icon = this.querySelector('i');
+            if (icon) {
+                if (this.getAttribute('aria-expanded') === 'true') {
+                    icon.className = 'fas fa-chevron-up';
+                    this.innerHTML = this.innerHTML.replace('展开详情', '收起详情');
+                } else {
+                    icon.className = 'fas fa-chevron-down';
+                    this.innerHTML = this.innerHTML.replace('收起详情', '展开详情');
+                }
+            }
+        });
+    });
+    
+    // 监听来自其他页面的消息（用于更新统计数字）
+    window.addEventListener('message', function(event) {
+        if (event.data.type === 'stats_updated') {
+            updateStatsDisplay(event.data.stats);
+        }
+    });
+});
+
+// 加载初始统计数字
+function loadInitialStats() {
+    fetch('/api/stats')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateStatsDisplay(data.stats);
+            }
+        })
+        .catch(error => {
+            console.error('加载统计数字失败:', error);
+        });
+}
+</script>
+{% endblock %}

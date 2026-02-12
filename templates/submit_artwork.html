@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %} - 投稿{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <h2 class="mb-4">投稿艺术作品</h2>
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" action="/submit-artwork" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label">作品名称 *</label>
+                        <input type="text" class="form-control" name="title" required>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">艺术家姓名 *</label>
+                            <input type="text" class="form-control" name="artist" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">创作年份</label>
+                            <input type="text" class="form-control" id="year" name="year" placeholder="例如：1889 或 19世纪">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">作品描述 *</label>
+                        <textarea class="form-control" name="description" rows="4" required></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">图片来源 *</label>
+                        <input type="url" class="form-control" name="image_url" 
+                               placeholder="请输入图片链接" required>
+                        <small class="text-muted">请提供来自博物馆官网或公开数据库的图片链接</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">信息来源 *</label>
+                        <select class="form-select" name="source" required>
+                            <option value="">请选择</option>
+                            <option value="博物馆官网">博物馆官网</option>
+                            <option value="百度百科">百度百科</option>
+                            <option value="维基百科">维基百科</option>
+                            <option value="公开数据库">公开数据库</option>
+                            <option value="其他">其他</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">来源链接</label>
+                        <input type="url" class="form-control" name="source_url" 
+                               placeholder="验证信息的网址">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">提交投稿</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

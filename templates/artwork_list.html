@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %} - 作品列表{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>艺术作品</h1>
+    <div class="col-md-4">
+        <!-- 搜索框 -->
+        <div class="input-group">
+            <input type="text" id="search-input" class="form-control" placeholder="搜索作品...">
+            <button class="btn btn-primary" onclick="searchArtworks()">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 筛选选项 -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <select class="form-select" id="style-filter" onchange="filterArtworks()">
+            <option value="">所有风格</option>
+            <option value="文艺复兴">文艺复兴</option>
+            <option value="印象派">印象派</option>
+            <option value="现代艺术">现代艺术</option>
+            <!-- 【需要更改】添加更多艺术风格 -->
+        </select>
+    </div>
+    <div class="col-md-3">
+        <select class="form-select" id="era-filter" onchange="filterArtworks()">
+            <option value="">所有时代</option>
+            <option value="15世纪">15世纪</option>
+            <option value="19世纪">19世纪</option>
+            <option value="20世纪">20世纪</option>
+            <!-- 【需要更改】添加更多时代 -->
+        </select>
+    </div>
+    <div class="col-md-3">
+        <select class="form-select" id="artist-filter" onchange="filterArtworks()">
+            <option value="">所有艺术家</option>
+            <!-- 这里将通过JavaScript动态加载 -->
+        </select>
+    </div>
+    <div class="col-md-3">
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-outline-secondary active" onclick="setViewMode('grid')">
+                <i class="fas fa-th"></i>
+            </button>
+            <button type="button" class="btn btn-outline-secondary" onclick="setViewMode('list')">
+                <i class="fas fa-list"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 作品网格 -->
+<div class="row" id="artworks-container">
+    {% for artwork in artworks %}
+    <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+        <div class="card h-100">
+            <img src="{{ artwork.image_url or url_for('static', filename='images/default.jpg') }}" 
+                 class="card-img-top" alt="{{ artwork.title }}" style="height: 200px; object-fit: cover;">
+            <div class="card-body">
+                <h5 class="card-title">{{ artwork.title }}</h5>
+                <p class="card-text text-muted">
+                    {% if artwork.year %}{{ artwork.year }}年{% endif %}
+                    {% if artwork.style %}| {{ artwork.style }}{% endif %}
+                </p>
+                <div class="d-flex justify-content-between">
+                    <a href="/artwork/{{ artwork.id }}" class="btn btn-sm btn-primary">查看详情</a>
+                    <a href="/author/{{ artwork.artist_id }}" class="btn btn-sm btn-outline-secondary">
+                        查看作者
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// 这里添加筛选和搜索功能
+</script>
+{% endblock %}
