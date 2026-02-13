@@ -17,64 +17,98 @@
 </div>
 
 <!-- 筛选选项 -->
-<div class="row mb-4">
+<!-- 筛选选项 - 表单提交版 -->
+<form method="get" action="{{ url_for('artworks') }}" class="row mb-4">
     <div class="col-md-3">
-        <select class="form-select" id="style-filter" onchange="filterArtworks()">
+        <select name="style" class="form-select" onchange="this.form.submit()">
             <option value="">所有风格</option>
-            <option value="文艺复兴">文艺复兴</option>
-            <option value="印象派">印象派</option>
-            <option value="现代艺术">现代艺术</option>
-            <!-- 【需要更改】添加更多艺术风格 -->
+            <option value="文艺复兴" {% if current_style == '文艺复兴' %}selected{% endif %}>文艺复兴</option>
+            <option value="印象派" {% if current_style == '印象派' %}selected{% endif %}>印象派</option>
+            <option value="现代艺术" {% if current_style == '现代艺术' %}selected{% endif %}>现代艺术</option>
+            <!-- 您可以继续添加更多风格选项，保留 selected 判断 -->
         </select>
     </div>
     <div class="col-md-3">
-        <select class="form-select" id="era-filter" onchange="filterArtworks()">
+        <select name="era" class="form-select" onchange="this.form.submit()">
             <option value="">所有时代</option>
-            <option value="15世纪">15世纪</option>
-            <option value="19世纪">19世纪</option>
-            <option value="20世纪">20世纪</option>
-            <!-- 【需要更改】添加更多时代 -->
+            <option value="15世纪" {% if current_era == '15世纪' %}selected{% endif %}>15世纪</option>
+            <option value="19世纪" {% if current_era == '19世纪' %}selected{% endif %}>19世纪</option>
+            <option value="20世纪" {% if current_era == '20世纪' %}selected{% endif %}>20世纪</option>
+            <!-- 添加更多时代 -->
         </select>
     </div>
     <div class="col-md-3">
-        <select class="form-select" id="artist-filter" onchange="filterArtworks()">
+        <select name="artist" class="form-select" onchange="this.form.submit()">
             <option value="">所有艺术家</option>
-            <!-- 这里将通过JavaScript动态加载 -->
+            {% for artist in all_artists %}
+            <option value="{{ artist.name }}" {% if current_artist == artist.name %}selected{% endif %}>
+                {{ artist.name }}
+            </option>
+            {% endfor %}
         </select>
     </div>
     <div class="col-md-3">
         <div class="btn-group" role="group">
-            <button type="button" class="btn btn-outline-secondary active" onclick="setViewMode('grid')">
-                <i class="fas fa-th"></i>
-            </button>
-            <button type="button" class="btn btn-outline-secondary" onclick="setViewMode('list')">
-                <i class="fas fa-list"></i>
-            </button>
+            <a href="{{ url_for('artworks', style=current_style, era=current_era, artist=current_artist, view='grid') }}"
+               class="btn btn-outline-secondary {% if view_mode == 'grid' %}active{% endif %}">
+                <i class="fas fa-th"></i> 网格
+            </a>
+            <a href="{{ url_for('artworks', style=current_style, era=current_era, artist=current_artist, view='list') }}"
+               class="btn btn-outline-secondary {% if view_mode == 'list' %}active{% endif %}">
+                <i class="fas fa-list"></i> 列表
+            </a>
         </div>
     </div>
-</div>
+</form>
 
-<!-- 作品网格 -->
-<div class="row" id="artworks-container">
+<!-- 作品展示区 - 根据 view_mode 显示不同样式 -->
+<div class="row {% if view_mode == 'list' %}flex-column{% else %}row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4{% endif %}" id="artworks-container">
     {% for artwork in artworks %}
-    <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-        <div class="card h-100">
-            <img src="{{ artwork.image_url or url_for('static', filename='images/default.jpg') }}" 
-                 class="card-img-top" alt="{{ artwork.title }}" style="height: 200px; object-fit: cover;">
-            <div class="card-body">
-                <h5 class="card-title">{{ artwork.title }}</h5>
-                <p class="card-text text-muted">
-                    {% if artwork.year %}{{ artwork.year }}年{% endif %}
-                    {% if artwork.style %}| {{ artwork.style }}{% endif %}
-                </p>
-                <div class="d-flex justify-content-between">
-                    <a href="/artwork/{{ artwork.id }}" class="btn btn-sm btn-primary">查看详情</a>
-                    <a href="/author/{{ artwork.artist_id }}" class="btn btn-sm btn-outline-secondary">
-                        查看作者
-                    </a>
+        {% if view_mode == 'grid' %}
+        <!-- 网格模式卡片（与您原来一样） -->
+        <div class="col mb-4">
+            <div class="card h-100">
+                <img src="{{ artwork.image_url or url_for('static', filename='images/default.jpg') }}"
+                     class="card-img-top" alt="{{ artwork.title }}" style="height: 200px; object-fit: cover;">
+                <div class="card-body">
+                    <h5 class="card-title">{{ artwork.title }}</h5>
+                    <p class="card-text text-muted">
+                        {% if artwork.year %}{{ artwork.year }}年{% endif %}
+                        {% if artwork.style %}| {{ artwork.style }}{% endif %}
+                    </p>
+                    <div class="d-flex justify-content-between">
+                        <a href="/artwork/{{ artwork.id }}" class="btn btn-sm btn-primary">查看详情</a>
+                        <a href="/author/{{ artwork.artist_id }}" class="btn btn-sm btn-outline-secondary">查看作者</a>
+                    </div>
                 </div>
             </div>
         </div>
+        {% else %}
+        <!-- 列表模式卡片（一行一个，横向布局） -->
+        <div class="col mb-3">
+            <div class="card d-flex flex-row p-2">
+                <img src="{{ artwork.image_url or url_for('static', filename='images/default.jpg') }}"
+                     alt="{{ artwork.title }}" style="width: 120px; height: 120px; object-fit: cover; border-radius: 4px;">
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <h5 class="card-title">{{ artwork.title }}</h5>
+                    <p class="card-text text-muted">
+                        {{ artwork.artist.name if artwork.artist else '未知艺术家' }}
+                        {% if artwork.year %}| {{ artwork.year }}年{% endif %}
+                        {% if artwork.style %}| {{ artwork.style }}{% endif %}
+                    </p>
+                    <div>
+                        <a href="/artwork/{{ artwork.id }}" class="btn btn-sm btn-primary">查看详情</a>
+                        {% if artwork.artist_id %}
+                        <a href="/author/{{ artwork.artist_id }}" class="btn btn-sm btn-outline-secondary ms-2">查看作者</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    {% else %}
+    <div class="col-12 text-center py-5">
+        <p class="text-muted">暂无符合条件的作品</p>
     </div>
     {% endfor %}
 </div>

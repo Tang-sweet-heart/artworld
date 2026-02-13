@@ -237,14 +237,44 @@ def index():
 # ========== 7. 作品相关路由 ==========
 @app.route('/artworks')
 def artworks():
-    """作品列表页"""
-    style_filter = request.args.get('style', '')
-    if style_filter:
-        artworks_list = Artwork.query.filter_by(style=style_filter, is_approved=True).all()
-    else:
-        artworks_list = Artwork.query.filter_by(is_approved=True).all()
+    """作品列表页 - 支持风格、时代、艺术家筛选及视图模式"""
+    # 获取筛选参数
+    style = request.args.get('style', '')
+    era = request.args.get('era', '')
+    artist_name = request.args.get('artist', '')
+    view_mode = request.args.get('view', 'grid')  # 视图模式，默认网格
+
+    # 构建基础查询（只显示已审核作品）
+    query = Artwork.query.filter_by(is_approved=True)
+
+    # 按风格筛选
+    if style:
+        query = query.filter_by(style=style)
+
+    # 按时代筛选（假设 era 对应 Artist.era 字段）
+    if era:
+        query = query.join(Artist).filter(Artist.era == era)
+
+    # 按艺术家姓名筛选
+    if artist_name:
+        query = query.join(Artist).filter(Artist.name == artist_name)
+
+    # 执行查询
+    artworks_list = query.all()
+
+    # 获取所有艺术家列表（用于前端下拉框动态加载）
+    all_artists = Artist.query.order_by(Artist.name).all()
+
     user_logged_in = session.get('user_id') is not None
-    return render_template('artwork_list.html', artworks=artworks_list, user_logged_in=user_logged_in)
+
+    return render_template('artwork_list.html',
+                           artworks=artworks_list,
+                           all_artists=all_artists,
+                           user_logged_in=user_logged_in,
+                           current_style=style,
+                           current_era=era,
+                           current_artist=artist_name,
+                           view_mode=view_mode)
 
 @app.route('/artwork/<int:artwork_id>')
 def artwork_detail(artwork_id):
