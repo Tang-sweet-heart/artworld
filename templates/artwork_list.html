@@ -16,50 +16,16 @@
     </div>
 </div>
 
-<!-- 筛选选项 -->
-<!-- 筛选选项 - 表单提交版 -->
-<form method="get" action="{{ url_for('artworks') }}" class="row mb-4">
-    <div class="col-md-3">
-        <select name="style" class="form-select" onchange="this.form.submit()">
-            <option value="">所有风格</option>
-            <option value="文艺复兴" {% if current_style == '文艺复兴' %}selected{% endif %}>文艺复兴</option>
-            <option value="印象派" {% if current_style == '印象派' %}selected{% endif %}>印象派</option>
-            <option value="现代艺术" {% if current_style == '现代艺术' %}selected{% endif %}>现代艺术</option>
-            <!-- 您可以继续添加更多风格选项，保留 selected 判断 -->
-        </select>
-    </div>
-    <div class="col-md-3">
-        <select name="era" class="form-select" onchange="this.form.submit()">
-            <option value="">所有时代</option>
-            <option value="15世纪" {% if current_era == '15世纪' %}selected{% endif %}>15世纪</option>
-            <option value="19世纪" {% if current_era == '19世纪' %}selected{% endif %}>19世纪</option>
-            <option value="20世纪" {% if current_era == '20世纪' %}selected{% endif %}>20世纪</option>
-            <!-- 添加更多时代 -->
-        </select>
-    </div>
-    <div class="col-md-3">
-        <select name="artist" class="form-select" onchange="this.form.submit()">
-            <option value="">所有艺术家</option>
-            {% for artist in all_artists %}
-            <option value="{{ artist.name }}" {% if current_artist == artist.name %}selected{% endif %}>
-                {{ artist.name }}
-            </option>
-            {% endfor %}
-        </select>
-    </div>
-    <div class="col-md-3">
-        <div class="btn-group" role="group">
-            <a href="{{ url_for('artworks', style=current_style, era=current_era, artist=current_artist, view='grid') }}"
-               class="btn btn-outline-secondary {% if view_mode == 'grid' %}active{% endif %}">
-                <i class="fas fa-th"></i> 网格
-            </a>
-            <a href="{{ url_for('artworks', style=current_style, era=current_era, artist=current_artist, view='list') }}"
-               class="btn btn-outline-secondary {% if view_mode == 'list' %}active{% endif %}">
-                <i class="fas fa-list"></i> 列表
-            </a>
-        </div>
-    </div>
-</form>
+    return render_template('artwork_list.html',
+                           artworks=artworks_list,
+                           all_artists=all_artists,
+                           styles=styles,                # 新增
+                           eras=eras,                    # 新增
+                           user_logged_in=user_logged_in,
+                           current_style=style,
+                           current_era=era,
+                           current_artist=artist_name,
+                           view_mode=view_mode)
 
 <!-- 作品展示区 - 根据 view_mode 显示不同样式 -->
 <div class="row {% if view_mode == 'list' %}flex-column{% else %}row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4{% endif %}" id="artworks-container">

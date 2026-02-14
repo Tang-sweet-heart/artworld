@@ -261,6 +261,13 @@ def artworks():
 
     # 执行查询
     artworks_list = query.all()
+        # 获取所有不重复的风格（用于前端下拉框）
+    all_styles = Artwork.query.with_entities(Artwork.style).distinct().filter(Artwork.style != None, Artwork.style != '').order_by(Artwork.style).all()
+    styles = [s[0] for s in all_styles]
+
+    # 获取所有不重复的时代（用于前端下拉框）
+    all_eras = Artist.query.with_entities(Artist.era).distinct().filter(Artist.era != None, Artist.era != '').order_by(Artist.era).all()
+    eras = [e[0] for e in all_eras]
 
     # 获取所有艺术家列表（用于前端下拉框动态加载）
     all_artists = Artist.query.order_by(Artist.name).all()
@@ -270,6 +277,8 @@ def artworks():
     return render_template('artwork_list.html',
                            artworks=artworks_list,
                            all_artists=all_artists,
+                           styles=styles,                # 新增
+                           eras=eras,                    # 新增
                            user_logged_in=user_logged_in,
                            current_style=style,
                            current_era=era,
@@ -286,10 +295,44 @@ def artwork_detail(artwork_id):
 # ========== 8. 作者相关路由 ==========
 @app.route('/authors')
 def authors():
-    """作者列表页"""
-    authors_list = Artist.query.all()
+    """作者列表页 - 支持时代、国家筛选"""
+    # 获取筛选参数
+    era = request.args.get('era', '')
+    country = request.args.get('country', '')
+    view_mode = request.args.get('view', 'grid')  # 可选，如果您有网格/列表切换
+
+    # 构建查询
+    query = Artist.query
+
+    # 按时代筛选
+    if era:
+        query = query.filter_by(era=era)
+
+    # 按国家筛选
+    if country:
+        query = query.filter_by(country=country)
+
+    # 执行查询
+    authors_list = query.all()
+
+    # 获取所有不重复的时代和国家，用于下拉框选项
+    all_eras = Artist.query.with_entities(Artist.era).distinct().filter(Artist.era != None, Artist.era != '').order_by(Artist.era).all()
+    all_countries = Artist.query.with_entities(Artist.country).distinct().filter(Artist.country != None, Artist.country != '').order_by(Artist.country).all()
+
+    # 转换为简单列表
+    eras = [e[0] for e in all_eras if e[0]]
+    countries = [c[0] for c in all_countries if c[0]]
+
     user_logged_in = session.get('user_id') is not None
-    return render_template('author_list.html', authors=authors_list, user_logged_in=user_logged_in)
+
+    return render_template('author_list.html',
+                           authors=authors_list,
+                           eras=eras,
+                           countries=countries,
+                           current_era=era,
+                           current_country=country,
+                           view_mode=view_mode,
+                           user_logged_in=user_logged_in)
 
 @app.route('/author/<int:author_id>')
 def author_detail(author_id):

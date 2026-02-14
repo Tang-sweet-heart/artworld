@@ -5,38 +5,38 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1><i class="fas fa-user-tie"></i> 艺术家档案</h1>
     <div class="col-md-4">
-        <div class="input-group">
-            <input type="text" id="author-search" class="form-control" placeholder="搜索艺术家...">
-            <button class="btn btn-primary" onclick="searchAuthors()">
+        <form method="get" action="{{ url_for('authors') }}" class="input-group">
+            <input type="text" name="search" class="form-control" placeholder="搜索艺术家..." value="{{ request.args.get('search', '') }}">
+            <button class="btn btn-primary" type="submit">
                 <i class="fas fa-search"></i>
             </button>
-        </div>
+        </form>
     </div>
 </div>
 
-<!-- 时代筛选 -->
-<div class="row mb-4">
+<!-- 时代和国家筛选 - 表单提交版 -->
+<form method="get" action="{{ url_for('authors') }}" class="row mb-4">
     <div class="col-md-3">
-        <select class="form-select" id="era-filter" onchange="filterAuthors()">
+        <select name="era" class="form-select" onchange="this.form.submit()">
             <option value="">所有时代</option>
-            <option value="文艺复兴">文艺复兴</option>
-            <option value="印象派">印象派</option>
-            <option value="现代艺术">现代艺术</option>
-            <option value="当代艺术">当代艺术</option>
-            <!-- 【可在此添加更多选项】 -->
+            {% for e in eras %}
+            <option value="{{ e }}" {% if current_era == e %}selected{% endif %}>{{ e }}</option>
+            {% endfor %}
         </select>
     </div>
     <div class="col-md-3">
-        <select class="form-select" id="country-filter" onchange="filterAuthors()">
+        <select name="country" class="form-select" onchange="this.form.submit()">
             <option value="">所有国家</option>
-            <option value="意大利">意大利</option>
-            <option value="荷兰">荷兰</option>
-            <option value="法国">法国</option>
-            <option value="中国">中国</option>
-            <!-- 【可在此添加更多选项】 -->
+            {% for c in countries %}
+            <option value="{{ c }}" {% if current_country == c %}selected{% endif %}>{{ c }}</option>
+            {% endfor %}
         </select>
     </div>
-</div>
+    <!-- 可选：保留视图切换（如果需要） -->
+    <div class="col-md-3">
+        <input type="hidden" name="view" value="{{ view_mode }}">
+    </div>
+</form>
 
 <!-- 艺术家列表 -->
 <div class="row" id="authors-container">
@@ -61,31 +61,16 @@
         </div>
     </div>
     {% else %}
-    <!-- 如果没有作者数据，显示提示 -->
     <div class="col-12">
         <div class="alert alert-info">
-            暂无艺术家数据。
+            暂无符合条件的艺术家。
         </div>
     </div>
     {% endfor %}
 </div>
 {% endblock %}
 
+{# 注意：原有的 scripts 块中的 JavaScript 已经不需要了，可以删除 #}
 {% block scripts %}
-<script>
-// 简单的客户端筛选功能（实际项目应使用后端筛选）
-function filterAuthors() {
-    const era = document.getElementById('era-filter').value;
-    const country = document.getElementById('country-filter').value;
-    alert(`筛选条件：时代=${era}, 国家=${country}\n\n（此为前端演示，完整功能需连接后端筛选接口。）`);
-}
-
-function searchAuthors() {
-    const query = document.getElementById('author-search').value;
-    if (query) {
-        // 在实际项目中，这里应跳转到带搜索参数的后端路由，如 /authors?q=query
-        alert(`搜索艺术家: ${query}\n\n（搜索功能需连接后端实现。）`);
-    }
-}
-</script>
+<!-- 移除原来的 alert 脚本，因为现在使用后端筛选 -->
 {% endblock %}
